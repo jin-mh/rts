@@ -102,6 +102,9 @@ int main(int count, char *strings[])
     int recvlen = -1;
     char *hostname = "127.0.0.1";
     int portnum = 5080;
+
+    if (count < 2)
+        exit(1);
     SSL_library_init();
 
     ctx = InitCTX();
@@ -115,11 +118,13 @@ int main(int count, char *strings[])
         ERR_print_errors_fp(stderr);
     else
     {
-        char RequestMessage[20]; // 전송 메세지 문자열
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        // sprintf(RequestMessage, "/*TEST_%10llu%10llu*/", tv.tv_sec - 10, tv.tv_sec - 5); // 현재시간 -10 이후의 파일 요청 메세지 생성
-        sprintf(RequestMessage, "/*TEST_%10llu%10llu*/", 0, tv.tv_sec); // 현재시간 -10 이후의 파일 요청 메세지 생성
+        char RequestMessage[21]; // 전송 메세지 문자열
+        RequestMessage[20] = '\0';
+        // struct timeval tv;
+        // gettimeofday(&tv, NULL);
+        // sprintf(RequestMessage, "/*TEST_%010llu%10llu*/", 0, tv.tv_sec); // 현재시간 -10 이후의 파일 요청 메세지 생성
+        sprintf(RequestMessage, "/*TEST_%s*/", strings[1]); // timestamp 메세지 생성
+        puts(RequestMessage);
 
         printf("\nConnected with %s encryption\n", SSL_get_cipher(ssl));
         ShowCerts(ssl);
