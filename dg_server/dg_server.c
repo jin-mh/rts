@@ -62,6 +62,7 @@ int LoadCertificates(SSL_CTX *ctx, char *CertFile, char *KeyFile)
     }
     SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
     SSL_CTX_set_verify_depth(ctx, 4);
+    return 0;
 }
 int ShowCerts(SSL *ssl)
 {
