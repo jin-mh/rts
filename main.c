@@ -17,7 +17,7 @@
 #include "./lz4.c" //lz4 압축 라이브러리
 
 #define LOGINTERVAL 50000 // 로그 간격 us
-#define FILEOUTINTERVAL 5 // 파일출력 간격 sec
+#define FILEOUTINTERVAL 10 // 파일출력 간격 sec
 
 char *logsum = NULL;	 // 전체 로그 메모리
 uint64_t logsum_len = 0; // 전체로그 길이
@@ -611,21 +611,23 @@ void *t_shm(void *state)
 		sleeptime = (interval_log_us * ++cnt > etime) ? interval_log_us * cnt - etime : 0;
 
 		// 실행 정보 출력
-		// if (sleeptime < test_minsleeptime)
-		// 	test_minsleeptime = sleeptime;
+		if (sleeptime < test_minsleeptime)
+			test_minsleeptime = sleeptime;
 
-		// test_sleep_avg += sleeptime;
-		// test_sleep_avg /= 2;
+		test_sleep_avg += sleeptime;
+		test_sleep_avg /= 2;
 
 		// 실행시간, sleep 시간, 설정 로그 간격, 메모리 할당 크기, 최고 sleep 시간 등
 		// fprintf(stderr, "%8ld : SHM LOG : %4lu /%4lu /%4lu ms %8lums %8luMB alloc min : %8u us avg : %4lu ms ",
 		// 		0, (interval_log_us - sleeptime) / 1000, sleeptime / 1000, interval_log_us / 1000, etime / 1000, logsizealloced >> 20, test_minsleeptime, test_sleep_avg / 1000); // 카운터,시간 출력
+		fprintf(stderr, "SHM THREAD: %4lu /%4lu ms, sleep :%4lu ms, running :%8lums, allocated :%4luMB, min sleep : %8u us, avg sleep : %4lu ms ",
+				(interval_log_us - sleeptime) / 1000, interval_log_us / 1000, sleeptime / 1000, etime / 1000, logsizealloced >> 20, test_minsleeptime, test_sleep_avg / 1000); // 카운터,시간 출력
 
 		// 실행중인 sql 개수
-		// fprintf(stderr, "running sqls : %d\n", running_sql_cnt);
+		fprintf(stderr, "running sqls : %d\n", running_sql_cnt);
 
-		// if (test_minsleeptime <= 10)
-		// 	test_minsleeptime = LOGINTERVAL;
+		if (test_minsleeptime <= 10)
+			test_minsleeptime = LOGINTERVAL;
 
 		if (sleeptime > 0)
 			usleep(sleeptime);
@@ -854,7 +856,7 @@ void sned_to_datagather(char *timestamp_start, char *timestamp_end)
 			else
 				fprintf(stderr, "DG cert fail\n");
 			char valid_msg[29];
-			sprintf(valid_msg, "//TEST%s%s*/", timestamp_start, timestamp_end); // 메세지 형식 + timestamp
+			sprintf(valid_msg, "/*TEST%s%s*/", timestamp_start, timestamp_end); // 메세지 형식 + timestamp
 
 			SSL_write(ssl, valid_msg, strlen(valid_msg));
 
@@ -940,7 +942,7 @@ void *t_ssl(void *state)
 		{
 			char buff[1024] = {0};
 			int recvlen;
-			const char valid_msg_start[] = "//TEST"; // 확인용 메세지
+			const char valid_msg_start[] = "/*TEST"; // 확인용 메세지
 			const char valid_msg_end[] = "*/";
 			if (SSL_accept(ssl) == -1) // SSL accept
 				ERR_print_errors_fp(stderr);
